@@ -154,6 +154,84 @@
             </div>
             <div id="keywordList" class="keyword-list"></div>
           </div>
+
+          <div class="hr-review-wrap">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">HR Feedback</p>
+                <h2>HR评分闭环</h2>
+              </div>
+              <span id="reviewCount" class="result-badge">0条</span>
+            </div>
+
+            <div class="hr-score-grid">
+              <label class="score-slider">
+                <span>岗位匹配</span>
+                <input type="range" min="1" max="10" value="8" data-hr-score="jobFit" />
+                <strong id="jobFitValue">8</strong>
+              </label>
+              <label class="score-slider">
+                <span>经验质量</span>
+                <input type="range" min="1" max="10" value="7" data-hr-score="experience" />
+                <strong id="experienceValue">7</strong>
+              </label>
+              <label class="score-slider">
+                <span>表达清晰</span>
+                <input type="range" min="1" max="10" value="8" data-hr-score="clarity" />
+                <strong id="clarityValue">8</strong>
+              </label>
+              <label class="score-slider">
+                <span>量化成果</span>
+                <input type="range" min="1" max="10" value="6" data-hr-score="quantified" />
+                <strong id="quantifiedValue">6</strong>
+              </label>
+              <label class="score-slider">
+                <span>可信度</span>
+                <input type="range" min="1" max="10" value="7" data-hr-score="credibility" />
+                <strong id="credibilityValue">7</strong>
+              </label>
+              <label class="score-slider">
+                <span>面试价值</span>
+                <input type="range" min="1" max="10" value="7" data-hr-score="interview" />
+                <strong id="interviewValue">7</strong>
+              </label>
+            </div>
+
+            <label class="hr-note">
+              <span>HR评语</span>
+              <textarea id="hrNoteInput" spellcheck="false">适合进入候选池，建议补充更真实的活动数据和个人贡献边界。</textarea>
+            </label>
+
+            <div class="hr-actions">
+              <button id="saveHrScoreBtn" class="ghost-btn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+                  <path d="M17 21v-8H7v8M7 3v5h8" />
+                </svg>
+                提交评分
+              </button>
+              <button id="resetHrScoresBtn" class="ghost-btn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 12a9 9 0 1 0 3-6.7" />
+                  <path d="M3 4v6h6" />
+                </svg>
+                重置评分
+              </button>
+            </div>
+
+            <div class="hr-decision">
+              <div class="hr-total">
+                <strong id="hrTotalScore">0</strong>
+                <span>/100</span>
+              </div>
+              <div>
+                <p id="hrDecisionText">等待HR评分</p>
+                <small id="candidateDirectionText">生成结果后提交评分，可形成筛选和优化建议。</small>
+              </div>
+            </div>
+
+            <div id="hrHistoryList" class="hr-history"></div>
+          </div>
         </section>
 
         <section class="output-panel" aria-label="输出区">

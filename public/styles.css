@@ -397,7 +397,8 @@ textarea:focus {
 
 .score-band,
 .radar-wrap,
-.keyword-wrap {
+.keyword-wrap,
+.hr-review-wrap {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -478,6 +479,123 @@ textarea:focus {
   border-color: rgba(240, 179, 90, 0.4);
   color: #ffdfaa;
   background: rgba(240, 179, 90, 0.08);
+}
+
+.hr-score-grid {
+  display: grid;
+  gap: 9px;
+}
+
+.score-slider {
+  display: grid;
+  grid-template-columns: 68px minmax(86px, 1fr) 24px;
+  gap: 9px;
+  align-items: center;
+  min-height: 32px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.score-slider input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.score-slider strong {
+  color: var(--text);
+  text-align: right;
+}
+
+.hr-note {
+  display: block;
+  margin-top: 10px;
+}
+
+.hr-note span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hr-note textarea {
+  min-height: 78px;
+  max-height: 120px;
+  padding: 10px;
+  font-size: 12px;
+}
+
+.hr-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.hr-decision {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(63, 224, 181, 0.24);
+  border-radius: var(--radius);
+  background: rgba(63, 224, 181, 0.07);
+}
+
+.hr-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.hr-total strong {
+  color: var(--accent);
+  font-size: 26px;
+}
+
+.hr-total span {
+  color: var(--muted);
+}
+
+.hr-decision p {
+  margin: 0 0 4px;
+  font-weight: 800;
+}
+
+.hr-decision small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.hr-history {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.hr-history-item {
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.hr-history-item strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #e8f7ef;
+  font-size: 13px;
+}
+
+.hr-history-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .result-badge {

@@ -37,11 +37,38 @@ const defaultRadar = [
   { label: "可读性", before: 0, after: 0 }
 ];
 
+const HR_STORAGE_KEY = "renaissance-hr-reviews";
+const hrScoreWeights = {
+  jobFit: 28,
+  experience: 22,
+  clarity: 15,
+  quantified: 15,
+  credibility: 10,
+  interview: 10
+};
+const hrScoreLabels = {
+  jobFit: "岗位匹配",
+  experience: "经验质量",
+  clarity: "表达清晰",
+  quantified: "量化成果",
+  credibility: "可信度",
+  interview: "面试价值"
+};
+const hrDirectionMap = {
+  jobFit: "补充与JD职责直接相关的经历，把岗位关键词放进项目描述。",
+  experience: "突出个人负责的任务边界，减少泛泛的协助型表达。",
+  clarity: "压缩长句，按动作、方法、结果的顺序重写经历。",
+  quantified: "补充规模、转化率、留存率、完成数量等真实指标。",
+  credibility: "标注数据来源或使用保守表述，避免无法解释的夸大数字。",
+  interview: "增加一个可在面试中展开讲清楚的代表性项目案例。"
+};
+
 const state = {
   result: null,
   streamedMarkdown: "",
   activePhase: null,
-  busy: false
+  busy: false,
+  hrReviews: []
 };
 
 const els = {};
@@ -49,9 +76,11 @@ const els = {};
 document.addEventListener("DOMContentLoaded", () => {
   bindElements();
   bindEvents();
+  state.hrReviews = loadHrReviews();
   fillSample();
   renderRadar(defaultRadar);
   renderKeywords([]);
+  renderHrPanel();
 });
 
 function bindElements() {
@@ -74,7 +103,16 @@ function bindElements() {
     resultBadge: document.getElementById("resultBadge"),
     optimizedOutput: document.getElementById("optimizedOutput"),
     diffList: document.getElementById("diffList"),
-    printContent: document.getElementById("printContent")
+    printContent: document.getElementById("printContent"),
+    hrScoreInputs: Array.from(document.querySelectorAll("[data-hr-score]")),
+    hrNoteInput: document.getElementById("hrNoteInput"),
+    saveHrScoreBtn: document.getElementById("saveHrScoreBtn"),
+    resetHrScoresBtn: document.getElementById("resetHrScoresBtn"),
+    hrTotalScore: document.getElementById("hrTotalScore"),
+    hrDecisionText: document.getElementById("hrDecisionText"),
+    candidateDirectionText: document.getElementById("candidateDirectionText"),
+    hrHistoryList: document.getElementById("hrHistoryList"),
+    reviewCount: document.getElementById("reviewCount")
   });
 }
 
@@ -84,6 +122,11 @@ function bindEvents() {
   els.exportBtn.addEventListener("click", exportPdf);
   els.optimizeBtn.addEventListener("click", optimizeResume);
   els.resumeFile.addEventListener("change", importResumeFile);
+  els.saveHrScoreBtn.addEventListener("click", saveHrScore);
+  els.resetHrScoresBtn.addEventListener("click", resetHrScores);
+  els.hrScoreInputs.forEach(input => {
+    input.addEventListener("input", renderHrPanel);
+  });
 }
 
 function fillSample() {
@@ -383,6 +426,158 @@ function renderKeywords(items) {
       return `<span class="${className}">${escapeHtml(item.keyword || "")}</span>`;
     })
     .join("");
+}
+
+function getHrScores() {
+  return els.hrScoreInputs.reduce((scores, input) => {
+    scores[input.dataset.hrScore] = Number(input.value);
+    return scores;
+  }, {});
+}
+
+function calculateHrTotal(scores) {
+  return Object.entries(hrScoreWeights).reduce((total, [key, weight]) => {
+    return total + ((scores[key] || 0) / 10) * weight;
+  }, 0);
+}
+
+function getCandidateName() {
+  const firstLine = els.resumeInput.value
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .find(Boolean);
+  return firstLine || "未命名候选人";
+}
+
+function getWeakestDimension(scores) {
+  return Object.entries(scores).sort((a, b) => a[1] - b[1])[0]?.[0] || "jobFit";
+}
+
+function getHistoryAverage() {
+  if (!state.hrReviews.length) return 0;
+  const total = state.hrReviews.reduce((sum, review) => sum + review.total, 0);
+  return Math.round(total / state.hrReviews.length);
+}
+
+function buildHrDecision(total, scores) {
+  const weakest = getWeakestDimension(scores);
+  const historyAverage = getHistoryAverage();
+  const threshold = historyAverage ? Math.max(70, historyAverage + 3) : 75;
+  let decision;
+
+  if (total >= 85) {
+    decision = "优先面试";
+  } else if (total >= threshold) {
+    decision = "进入候选池";
+  } else if (total >= 55) {
+    decision = "待补充材料";
+  } else {
+    decision = "暂缓筛选";
+  }
+
+  const benchmark = historyAverage
+    ? `当前候选池均分 ${historyAverage}，建议筛选线 ${threshold}。`
+    : `建议先以 ${threshold} 分作为本岗位候选池筛选线。`;
+
+  return {
+    decision,
+    direction: `${benchmark} 求职者优化方向：${hrDirectionMap[weakest]}`,
+    weakestLabel: hrScoreLabels[weakest]
+  };
+}
+
+function renderHrPanel() {
+  const scores = getHrScores();
+  const total = Math.round(calculateHrTotal(scores));
+  const insight = buildHrDecision(total, scores);
+
+  els.hrScoreInputs.forEach(input => {
+    const valueEl = document.getElementById(`${input.dataset.hrScore}Value`);
+    if (valueEl) valueEl.textContent = input.value;
+  });
+
+  els.hrTotalScore.textContent = String(total);
+  els.hrDecisionText.textContent = `${insight.decision} · 短板：${insight.weakestLabel}`;
+  els.candidateDirectionText.textContent = insight.direction;
+  els.reviewCount.textContent = `${state.hrReviews.length}条`;
+  renderHrHistory();
+}
+
+function saveHrScore() {
+  const scores = getHrScores();
+  const total = Math.round(calculateHrTotal(scores));
+  const insight = buildHrDecision(total, scores);
+  const review = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    candidate: getCandidateName(),
+    total,
+    decision: insight.decision,
+    weakestLabel: insight.weakestLabel,
+    note: els.hrNoteInput.value.trim(),
+    aiScore: state.result?.matchScore || 0,
+    createdAt: new Date().toLocaleString("zh-CN"),
+    scores
+  };
+
+  state.hrReviews = [review, ...state.hrReviews].slice(0, 8);
+  saveHrReviews(state.hrReviews);
+  renderHrPanel();
+  setStatus(`HR评分已保存：${total}/100`);
+}
+
+function resetHrScores() {
+  const defaults = {
+    jobFit: 8,
+    experience: 7,
+    clarity: 8,
+    quantified: 6,
+    credibility: 7,
+    interview: 7
+  };
+
+  els.hrScoreInputs.forEach(input => {
+    input.value = String(defaults[input.dataset.hrScore] || 7);
+  });
+  els.hrNoteInput.value = "适合进入候选池，建议补充更真实的活动数据和个人贡献边界。";
+  renderHrPanel();
+  setStatus("HR评分已重置");
+}
+
+function renderHrHistory() {
+  if (!state.hrReviews.length) {
+    els.hrHistoryList.innerHTML = `<div class="hr-history-item"><p>暂无HR评分记录。</p></div>`;
+    return;
+  }
+
+  els.hrHistoryList.innerHTML = state.hrReviews
+    .slice(0, 3)
+    .map(
+      review => `
+        <div class="hr-history-item">
+          <strong>${escapeHtml(review.candidate)} · ${review.total}/100 · ${escapeHtml(review.decision)}</strong>
+          <p>短板：${escapeHtml(review.weakestLabel)}。${escapeHtml(review.note || "未填写评语")}</p>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function loadHrReviews() {
+  try {
+    const stored = localStorage.getItem(HR_STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHrReviews(reviews) {
+  try {
+    localStorage.setItem(HR_STORAGE_KEY, JSON.stringify(reviews));
+  } catch {
+    setStatus("评分记录无法写入本地存储");
+  }
 }
 
 function renderDiff(sections) {
