@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Renaissance AI Resume Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40" role="img">
+              <path d="M20 4 34 12v16L20 36 6 28V12L20 4Z" />
+              <path d="M14 20h12M20 14v12" />
+            </svg>
+          </div>
+          <div>
+            <p class="eyebrow">A组 MVP 原型</p>
+            <h1>Renaissance AI</h1>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <label class="switch">
+            <input id="demoMode" type="checkbox" checked />
+            <span class="switch-track" aria-hidden="true"></span>
+            <span>剧本模式</span>
+          </label>
+          <button id="sampleBtn" class="ghost-btn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 4h14v16H5z" />
+              <path d="M8 8h8M8 12h8M8 16h5" />
+            </svg>
+            填入样例
+          </button>
+          <button id="clearBtn" class="ghost-btn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M9 7V5h6v2M9 11v6M15 11v6M6 7l1 13h10l1-13" />
+            </svg>
+            清空
+          </button>
+          <button id="exportBtn" class="ghost-btn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v12M8 11l4 4 4-4" />
+              <path d="M5 19h14" />
+            </svg>
+            导出PDF
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="input-panel" aria-label="输入区">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Input</p>
+              <h2>简历与目标岗位</h2>
+            </div>
+            <label class="file-chip">
+              <input id="resumeFile" type="file" accept=".txt,.md,.text" />
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v12M8 7l4-4 4 4" />
+                <path d="M5 15v4h14v-4" />
+              </svg>
+              导入文本
+            </label>
+          </div>
+
+          <label class="field">
+            <span>旧版简历</span>
+            <textarea id="resumeInput" spellcheck="false"></textarea>
+          </label>
+
+          <label class="field">
+            <span>目标岗位 JD</span>
+            <textarea id="jdInput" spellcheck="false"></textarea>
+          </label>
+        </section>
+
+        <section class="control-panel" aria-label="处理中枢">
+          <div class="launch-zone">
+            <button id="optimizeBtn" class="primary-btn" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m5 12 4 4L19 6" />
+              </svg>
+              开始优化
+            </button>
+            <p id="statusText" class="status-text">等待输入</p>
+          </div>
+
+          <div class="phase-list" id="phaseList">
+            <div class="phase-item" data-phase="parse">
+              <span></span>
+              <div>
+                <strong>解析简历经历</strong>
+                <small>识别经历、动作和成果表达</small>
+              </div>
+            </div>
+            <div class="phase-item" data-phase="jd">
+              <span></span>
+              <div>
+                <strong>提取JD关键词</strong>
+                <small>定位岗位要求和能力信号</small>
+              </div>
+            </div>
+            <div class="phase-item" data-phase="rewrite">
+              <span></span>
+              <div>
+                <strong>STAR法则重写</strong>
+                <small>补充情境、任务、行动和结果</small>
+              </div>
+            </div>
+            <div class="phase-item" data-phase="score">
+              <span></span>
+              <div>
+                <strong>计算匹配度</strong>
+                <small>生成评分和对比说明</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="score-band">
+            <div class="score-ring" id="scoreRing" style="--score: 0">
+              <div>
+                <strong id="scoreValue">0</strong>
+                <span>%</span>
+              </div>
+            </div>
+            <div>
+              <p class="eyebrow">Match Score</p>
+              <h2>岗位匹配度</h2>
+              <p id="sourceText" class="muted">尚未生成</p>
+            </div>
+          </div>
+
+          <div class="radar-wrap">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Analysis</p>
+                <h2>竞争力雷达</h2>
+              </div>
+            </div>
+            <svg id="radarChart" class="radar-chart" viewBox="0 0 260 230" role="img" aria-label="竞争力雷达图"></svg>
+          </div>
+
+          <div class="keyword-wrap">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Keywords</p>
+                <h2>关键词命中</h2>
+              </div>
+            </div>
+            <div id="keywordList" class="keyword-list"></div>
+          </div>
+        </section>
+
+        <section class="output-panel" aria-label="输出区">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Output</p>
+              <h2>优化结果</h2>
+            </div>
+            <span id="resultBadge" class="result-badge">未生成</span>
+          </div>
+
+          <article id="optimizedOutput" class="resume-preview">
+            <p class="placeholder">点击开始优化后，简历将在这里逐字生成。</p>
+          </article>
+
+          <div class="diff-section">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Before / After</p>
+                <h2>修改对比</h2>
+              </div>
+            </div>
+            <div id="diffList" class="diff-list"></div>
+          </div>
+        </section>
+      </main>
+
+      <section id="resumePrint" class="print-resume" aria-label="打印简历">
+        <div class="print-header">
+          <h1>Renaissance AI 优化简历</h1>
+          <p>Generated by A组 MVP Demo</p>
+        </div>
+        <div id="printContent"></div>
+      </section>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
